@@ -1,0 +1,61 @@
+# AlphaPTA — TA-Lib based indicator alternative to Alpha158 for 1-min data
+# Usage: custom_ops from qlib.contrib.ops.pandas_ta_ops must be registered
+# before handler instantiation (see run_AlphaPTA.py)
+
+market: &market 'all'
+start_time: &start_time "2026-05-22 09:30:00"
+train_end_time: &train_end_time "2026-06-11 15:59:00"
+valid_start_time: &valid_start_time "2026-06-11 16:00:00"
+valid_end_time: &valid_end_time "2026-06-16 15:59:00"
+end_time: &end_time "2026-06-18 15:59:00"
+
+data_handler_config: &data_handler_config
+    start_time: *start_time
+    end_time: *end_time
+    fit_start_time: *start_time
+    fit_end_time: *train_end_time
+    instruments: *market
+    freq: '1min'
+    infer_processors:
+        - class: 'RobustZScoreNorm'
+          kwargs:
+              fields_group: 'feature'
+              clip_outlier: False
+        - class: "Fillna"
+          kwargs:
+              fields_group: 'feature'
+    learn_processors:
+        - class: 'DropnaLabel'
+        - class: 'CSRankNorm'
+          kwargs:
+              fields_group: 'label'
+    label: ["Ref($close, -5) / Ref($close, -1) - 1"]
+
+task:
+    model:
+        class: "LGBModel"
+        module_path: "qlib.contrib.model.gbdt"
+        kwargs:
+            loss: 'mse'
+            learning_rate: 0.01
+            max_depth: 8
+            num_leaves: 150
+            lambda_l1: 1.5
+            lambda_l2: 1
+            num_threads: 20
+    dataset:
+        class: "DatasetH"
+        module_path: "qlib.data.dataset"
+        kwargs:
+            handler:
+                class: "AlphaPTA"
+                module_path: "qlib.contrib.data.pandas_ta_handler"
+                kwargs: *data_handler_config
+            segments:
+                train: [*start_time, *train_end_time]
+                valid: [*train_end_time, *valid_end_time]
+                test: [*valid_start_time, *end_time]
+    record:
+        - class: "SignalRecord"
+          module_path: "qlib.workflow.record_temp"
+          kwargs: {}

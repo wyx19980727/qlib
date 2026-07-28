@@ -1,5 +1,6 @@
 qlib_init:
-    provider_uri: "~/.qlib/qlib_data/cn_data_1min"
+    # provider_uri: "~/.qlib/qlib_data/cn_data_1min"
+    provider_uri: "/home/albus/Python_Codes/qlib/qlib_data/cn_data_1min"
     region: cn
 market: &market 'csi300'
 start_time: &start_time "2020-09-15 00:00:00"
@@ -35,8 +36,10 @@ task:
         class: "HFLGBModel"
         module_path: "qlib.contrib.model.highfreq_gdbt_model"
         kwargs:
-            objective: 'binary'
-            metric: ['binary_logloss','auc']
+            # objective: 'binary'
+            # metric: ['binary_logloss','auc']
+            objective: 'l2'
+            metric: ['mae','mse','rmse']
             verbosity: -1
             learning_rate: 0.01
             max_depth: 8

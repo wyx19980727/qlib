@@ -21,7 +21,9 @@ from qlib.utils import init_instance_by_config
 DIRNAME = Path(__file__).absolute().resolve().parent
 
 if __name__ == "__main__":
-    init()
+    import ipdb; ipdb.set_trace()
+    # init()
+    init(provider_uri="/home/albus/Python_Codes/qlib/qlib_data/cn_data/qlib_bin", region="cn")
 
     config_path = DIRNAME.parent / "benchmarks/LightGBM/workflow_config_lightgbm_Alpha158.yaml"
 
@@ -47,7 +49,7 @@ if __name__ == "__main__":
 
     # save new task
     with new_task_path.open("w") as f:
-        yaml.safe_dump(new_task_config, f, indent=4, sort_keys=False)
+        yaml.dump(new_task_config, f, indent=4, sort_keys=False)
 
     # 4) train model with new task
     with TimeInspector.logt("The time for task with handler cache:"):

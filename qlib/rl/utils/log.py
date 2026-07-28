@@ -443,7 +443,9 @@ class ConsoleWriter(LogWriter):
 
         if self.episode_count % self.log_every_n_episode == 0 or self.episode_count == self.total_episodes:
             # Only log periodically or at the end
-            self.console_logger.info(self.generate_log_message(logs))
+            msg = self.generate_log_message(logs)
+            print(msg, flush=True)
+            self.console_logger.info(msg)
 
     def generate_log_message(self, logs: Dict[str, float]) -> str:
         if self.prefix:

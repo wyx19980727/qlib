@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Callable, Optional, Union
 from typing import TYPE_CHECKING
 
-from qlib.constant import REG_CN, REG_US, REG_TW
+from qlib.constant import REG_CN, REG_HK, REG_US, REG_TW
 
 if TYPE_CHECKING:
     from qlib.utils.time import Freq
@@ -287,7 +287,8 @@ MODE_CONF = {
 }
 
 HIGH_FREQ_CONFIG = {
-    "provider_uri": "~/.qlib/qlib_data/cn_data_1min",
+    # "provider_uri": "~/.qlib/qlib_data/cn_data_1min",
+    "provider_uri": "/home/albus/Python_Codes/qlib/qlib_data/cn_data_1min",
     "dataset_cache": None,
     "expression_cache": "DiskExpressionCache",
     "region": REG_CN,
@@ -307,6 +308,11 @@ _default_region_config = {
     REG_TW: {
         "trade_unit": 1000,
         "limit_threshold": 0.1,
+        "deal_price": "close",
+    },
+    REG_HK: {
+        "trade_unit": 100,
+        "limit_threshold": None,
         "deal_price": "close",
     },
 }

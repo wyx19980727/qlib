@@ -2,6 +2,7 @@ import os
 
 import numpy as np
 import pandas as pd
+
 from qlib.data.dataset.processor import Processor
 from qlib.data.dataset.utils import fetch_df_by_index
 from typing import Dict
@@ -62,7 +63,7 @@ class HighFreqNorm(Processor):
     def __call__(self, df_features):
         if "date" in df_features:
             df_features.droplevel("date", inplace=True)
-        df_values = df_features.values
+        df_values = df_features.values.copy() if not df_features.values.flags.writeable else df_features.values
         index = 0
         names = {}
         for name, dim in self.norm_groups.items():

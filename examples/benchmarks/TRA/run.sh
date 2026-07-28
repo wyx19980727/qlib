@@ -1,4 +1,4 @@
-#!/bin/bash
+﻿#!/bin/bash
 
 # we used random seed(1 1000 2000 3000 4000 5000) in our experiments 
 

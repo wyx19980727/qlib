@@ -7,10 +7,12 @@ from qlib.data.dataset.utils import fetch_df_by_index
 
 class HighFreqNorm(Processor):
     def __init__(self, fit_start_time, fit_end_time):
+        import ipdb; ipdb.set_trace()
         self.fit_start_time = fit_start_time
         self.fit_end_time = fit_end_time
 
     def fit(self, df_features):
+        import ipdb; ipdb.set_trace()
         fetch_df = fetch_df_by_index(df_features, slice(self.fit_start_time, self.fit_end_time), level="datetime")
         del df_features
         df_values = fetch_df.values
@@ -34,6 +36,7 @@ class HighFreqNorm(Processor):
             self.feature_vmin[name] = np.nanmin(part_values)
 
     def __call__(self, df_features):
+        import ipdb; ipdb.set_trace()
         df_features["date"] = pd.to_datetime(
             df_features.index.get_level_values(level="datetime").to_series().dt.date.values
         )

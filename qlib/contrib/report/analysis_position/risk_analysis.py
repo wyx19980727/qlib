@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import logging
 from typing import Iterable
 
 import pandas as pd
@@ -10,6 +11,8 @@ import plotly.graph_objs as py
 from ...evaluate import risk_analysis
 
 from ..graph import SubplotsGraph, ScatterGraph
+
+logger = logging.getLogger(__name__)
 
 
 def _get_risk_analysis_data_with_report(
@@ -72,7 +75,7 @@ def _get_monthly_risk_analysis_with_report(report_normal_df: pd.DataFrame) -> pd
 
     gp_month = sorted(set(report_normal_gp.size().index))
 
-    _monthly_df = pd.DataFrame()
+    _monthly_parts = []
     for gp_m in gp_month:
         _m_report_normal = report_normal_gp.get_group(gp_m)
         # _m_report_long_short = report_long_short_gp.get_group(gp_m)
@@ -87,9 +90,9 @@ def _get_monthly_risk_analysis_with_report(report_normal_df: pd.DataFrame) -> pd
             # _m_report_long_short,
             pd.Timestamp(year=gp_m[0], month=gp_m[1], day=month_days),
         )
-        _monthly_df = pd.concat([_monthly_df, _temp_df], sort=False)
+        _monthly_parts.append(_temp_df)
 
-    return _monthly_df
+    return pd.concat(_monthly_parts, sort=False) if _monthly_parts else pd.DataFrame()
 
 
 def _get_monthly_analysis_with_feature(monthly_df: pd.DataFrame, feature: str = "annualized_return") -> pd.DataFrame:
@@ -151,7 +154,13 @@ def _get_monthly_risk_analysis_figure(report_normal_df: pd.DataFrame) -> Iterabl
     )
 
     for _feature in ["annualized_return", "max_drawdown", "information_ratio", "std"]:
-        _temp_df = _get_monthly_analysis_with_feature(_monthly_df, _feature)
+        if _monthly_df.empty:
+            continue
+        try:
+            _temp_df = _get_monthly_analysis_with_feature(_monthly_df, _feature)
+        except KeyError:
+            logger.warning(f"Skip monthly analysis: feature '{_feature}' not found in monthly data")
+            continue
         yield ScatterGraph(
             _temp_df,
             layout=dict(title=_feature, xaxis=dict(type="category", tickangle=45)),

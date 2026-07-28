@@ -530,7 +530,7 @@ class SAOEIntStrategy(SAOEStrategy):
             state = self.get_saoe_state_by_order(order)
 
             states.append(state)
-            obs_batch.append({"obs": self._state_interpreter.interpret(state)})
+            obs_batch.append({"obs": self._state_interpreter.interpret(state), "info": {}})
 
         with torch.no_grad():
             policy_out = self._policy(Batch(obs_batch))

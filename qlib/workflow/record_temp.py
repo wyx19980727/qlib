@@ -170,6 +170,7 @@ class SignalRecord(RecordTemp):
 
     @staticmethod
     def generate_label(dataset):
+        #import ipdb; ipdb.set_trace()
         with class_casting(dataset, DatasetH):
             params = dict(segments="test", col_set="label", data_key=DataHandlerLP.DK_R)
             try:
@@ -188,6 +189,7 @@ class SignalRecord(RecordTemp):
         return raw_label
 
     def generate(self, **kwargs):
+        #import ipdb; ipdb.set_trace()
         # generate prediction
         pred = self.model.predict(self.dataset)
         if isinstance(pred, pd.Series):
@@ -302,6 +304,7 @@ class SigAnaRecord(ACRecordTemp):
     depend_cls = SignalRecord
 
     def __init__(self, recorder, ana_long_short=False, ann_scaler=252, label_col=0, skip_existing=False):
+        #import ipdb; ipdb.set_trace()
         super().__init__(recorder=recorder, skip_existing=skip_existing)
         self.ana_long_short = ana_long_short
         self.ann_scaler = ann_scaler
@@ -314,6 +317,7 @@ class SigAnaRecord(ACRecordTemp):
         label : Optional[pd.DataFrame]
             Label should be a dataframe.
         """
+        #import ipdb; ipdb.set_trace()
         pred = self.load("pred.pkl")
         if label is None:
             label = self.load("label.pkl")
@@ -349,6 +353,7 @@ class SigAnaRecord(ACRecordTemp):
         return objects
 
     def list(self):
+        #import ipdb; ipdb.set_trace()
         paths = ["ic.pkl", "ric.pkl"]
         if self.ana_long_short:
             paths.extend(["long_short_r.pkl", "long_avg_r.pkl"])
@@ -395,6 +400,8 @@ class PortAnaRecord(ACRecordTemp):
             the candidate values include 'mean', 'amount_weighted', 'value_weighted'
         """
         super().__init__(recorder=recorder, skip_existing=skip_existing, **kwargs)
+        
+        #import ipdb; ipdb.set_trace()
 
         if config is None:
             config = {  # Default config for daily trading
@@ -454,6 +461,7 @@ class PortAnaRecord(ACRecordTemp):
         self.indicator_analysis_method = indicator_analysis_method
 
     def _get_report_freq(self, executor_config):
+        #import ipdb; ipdb.set_trace()
         ret_freq = []
         if executor_config["kwargs"].get("generate_portfolio_metrics", False):
             _count, _freq = Freq.parse(executor_config["kwargs"]["time_per_step"])
@@ -463,6 +471,7 @@ class PortAnaRecord(ACRecordTemp):
         return ret_freq
 
     def _generate(self, **kwargs):
+        #import ipdb; ipdb.set_trace()
         pred = self.load("pred.pkl")
 
         # replace the "<PRED>" with prediction saved before
@@ -550,6 +559,7 @@ class PortAnaRecord(ACRecordTemp):
         return artifact_objects
 
     def list(self):
+        import ipdb; ipdb.set_trace()
         list_path = []
         for _freq in self.all_freq:
             list_path.extend(

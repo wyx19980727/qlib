@@ -11,6 +11,8 @@ from qlib.utils import init_instance_by_config
 from qlib.utils.pickle_utils import restricted_pickle_load
 from qlib.tests.data import GetData
 
+import os
+os.environ["MLFLOW_ALLOW_FILE_STORE"] = "true"
 
 class RollingDataWorkflow:
     MARKET = "csi300"
@@ -19,12 +21,16 @@ class RollingDataWorkflow:
     rolling_cnt = 5
 
     def _init_qlib(self):
+        import ipdb; ipdb.set_trace()
         """initialize qlib"""
-        provider_uri = "~/.qlib/qlib_data/cn_data"  # target_dir
+        # provider_uri = "~/.qlib/qlib_data/cn_data"  # target_dir
+        provider_uri="/home/albus/Python_Codes/qlib/qlib_data/cn_data/qlib_bin"
+        
         GetData().qlib_data(target_dir=provider_uri, region=REG_CN, exists_skip=True)
         qlib.init(provider_uri=provider_uri, region=REG_CN)
 
     def _dump_pre_handler(self, path):
+        import ipdb; ipdb.set_trace()
         handler_config = {
             "class": "Alpha158",
             "module_path": "qlib.contrib.data.handler",
@@ -41,11 +47,13 @@ class RollingDataWorkflow:
         pre_handler.to_pickle(path)
 
     def _load_pre_handler(self, path):
+        import ipdb; ipdb.set_trace()
         with open(path, "rb") as file_dataset:
             pre_handler = restricted_pickle_load(file_dataset)
         return pre_handler
 
     def rolling_process(self):
+        import ipdb; ipdb.set_trace()
         self._init_qlib()
         self._dump_pre_handler("pre_handler.pkl")
         pre_handler = self._load_pre_handler("pre_handler.pkl")

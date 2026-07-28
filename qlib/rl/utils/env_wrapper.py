@@ -6,8 +6,8 @@ from __future__ import annotations
 import weakref
 from typing import Any, Callable, cast, Dict, Generic, Iterable, Iterator, Optional, Tuple
 
-import gym
-from gym import Space
+import gymnasium as gym
+from gymnasium import Space
 
 from qlib.rl.aux_info import AuxiliaryInfoCollector
 from qlib.rl.interpreter import ActionInterpreter, ObsType, PolicyActType, StateInterpreter
@@ -143,7 +143,7 @@ class EnvWrapper(
     def observation_space(self) -> Space:
         return self.state_interpreter.observation_space
 
-    def reset(self, **kwargs: Any) -> ObsType:
+    def reset(self, **kwargs: Any) -> tuple[ObsType, dict]:
         """
         Try to get a state from state queue, and init the simulator with this state.
         If the queue is exhausted, generate an invalid (nan) observation.
@@ -185,14 +185,14 @@ class EnvWrapper(
 
             self.status["obs_history"].append(obs)
 
-            return obs
+            return obs, {}
 
         except StopIteration:
             # The environment should be recycled because it's in a dead state.
             self.seed_iterator = None
-            return generate_nan_observation(self.observation_space)
+            return generate_nan_observation(self.observation_space), {}
 
-    def step(self, policy_action: PolicyActType, **kwargs: Any) -> Tuple[ObsType, float, bool, InfoDict]:
+    def step(self, policy_action: PolicyActType, **kwargs: Any) -> Tuple[ObsType, float, bool, bool, InfoDict]:
         """Environment step.
 
         See the code along with comments to get a sequence of things happening here.
@@ -244,7 +244,8 @@ class EnvWrapper(
         self.logger.add_any("policy_act", policy_action, loglevel=LogLevel.DEBUG)
 
         info_dict = InfoDict(log=self.logger.logs(), aux_info=aux_info)
-        return obs, rew, done, info_dict
+        # done is based on remaining steps (time limit) -> truncated, not terminated
+        return obs, rew, False, done, info_dict
 
     def render(self, mode: str = "human") -> None:
         raise NotImplementedError("Render is not implemented in EnvWrapper.")

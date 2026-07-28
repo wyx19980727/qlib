@@ -14,6 +14,7 @@ class HighFreqHandler(DataHandlerLP):
         fit_end_time=None,
         drop_raw=True,
     ):
+        import ipdb; ipdb.set_trace()
         infer_processors = check_transform_proc(infer_processors, fit_start_time, fit_end_time)
         learn_processors = check_transform_proc(learn_processors, fit_start_time, fit_end_time)
 
@@ -36,6 +37,7 @@ class HighFreqHandler(DataHandlerLP):
         )
 
     def get_feature_config(self):
+        import ipdb; ipdb.set_trace()
         fields = []
         names = []
 
@@ -98,6 +100,7 @@ class HighFreqHandler(DataHandlerLP):
         ]
         names += ["$volume_1"]
 
+        import ipdb; ipdb.set_trace()
         return fields, names
 
 
@@ -108,6 +111,7 @@ class HighFreqBacktestHandler(DataHandler):
         start_time=None,
         end_time=None,
     ):
+        import ipdb; ipdb.set_trace()
         data_loader = {
             "class": "QlibDataLoader",
             "kwargs": {
@@ -124,6 +128,7 @@ class HighFreqBacktestHandler(DataHandler):
         )
 
     def get_feature_config(self):
+        import ipdb; ipdb.set_trace()
         fields = []
         names = []
 

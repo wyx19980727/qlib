@@ -1,4 +1,4 @@
-#!/bin/bash
+﻿#!/bin/bash
 set -u
 
 # First check if the OS is Linux.

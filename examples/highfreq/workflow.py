@@ -8,7 +8,7 @@ from qlib.constant import REG_CN
 from qlib.config import HIGH_FREQ_CONFIG
 
 from qlib.utils import init_instance_by_config
-from qlib.utils.pickle_utils import restricted_pickle_load
+from qlib.utils.pickle_utils import restricted_pickle_load, add_safe_class
 from qlib.data.dataset.handler import DataHandlerLP
 from qlib.data.ops import Operators
 from qlib.data.data import Cal
@@ -20,7 +20,8 @@ from highfreq_ops import get_calendar_day, DayLast, FFillNan, BFillNan, Date, Se
 class HighfreqWorkflow:
     SPEC_CONF = {"custom_ops": [DayLast, FFillNan, BFillNan, Date, Select, IsNull, Cut], "expression_cache": None}
 
-    MARKET = "all"
+    # MARKET = "all"
+    MARKET = "csi300"
 
     start_time = "2020-09-15 00:00:00"
     end_time = "2021-01-18 16:00:00"
@@ -83,14 +84,15 @@ class HighfreqWorkflow:
     def _init_qlib(self):
         """initialize qlib"""
         # use cn_data_1min data
+        import ipdb; ipdb.set_trace()
         QLIB_INIT_CONFIG = {**HIGH_FREQ_CONFIG, **self.SPEC_CONF}
-        provider_uri = QLIB_INIT_CONFIG.get("provider_uri")
-        GetData().qlib_data(target_dir=provider_uri, interval="1min", region=REG_CN, exists_skip=True)
+        # provider_uri = QLIB_INIT_CONFIG.get("provider_uri")
+        # GetData().qlib_data(target_dir=provider_uri, interval="1min", region=REG_CN, exists_skip=True)
         qlib.init(**QLIB_INIT_CONFIG)
 
     def _prepare_calender_cache(self):
+        import ipdb; ipdb.set_trace()
         """preload the calendar for cache"""
-
         # This code used the copy-on-write feature of Linux to avoid calculating the calendar multiple times in the subprocess
         # This code may accelerate, but may be not useful on Windows and Mac Os
         Cal.calendar(freq="1min")
@@ -98,6 +100,7 @@ class HighfreqWorkflow:
 
     def get_data(self):
         """use dataset to get highreq data"""
+        import ipdb; ipdb.set_trace()
         self._init_qlib()
         self._prepare_calender_cache()
 
@@ -124,6 +127,9 @@ class HighfreqWorkflow:
 
         del dataset, dataset_backtest
         ##=============reload dataset=============
+        add_safe_class("highfreq_handler", "HighFreqHandler")
+        add_safe_class("highfreq_handler", "HighFreqBacktestHandler")
+        add_safe_class("highfreq_processor", "HighFreqNorm")
         with open("dataset.pkl", "rb") as file_dataset:
             dataset = restricted_pickle_load(file_dataset)
 

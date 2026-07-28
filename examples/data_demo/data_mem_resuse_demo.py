@@ -21,8 +21,13 @@ from qlib.utils import init_instance_by_config
 # For general purpose, we use relative path
 DIRNAME = Path(__file__).absolute().resolve().parent
 
+import os
+os.environ.setdefault("MLFLOW_ALLOW_FILE_STORE", "true")
+
 if __name__ == "__main__":
-    init()
+    import ipdb; ipdb.set_trace()
+    # init()
+    init(provider_uri="/home/albus/Python_Codes/qlib/qlib_data/cn_data/qlib_bin", region="cn")
 
     repeat = 2
     exp_name = "data_mem_reuse_demo"

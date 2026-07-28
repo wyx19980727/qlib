@@ -1,4 +1,4 @@
-#!/bin/sh
+﻿#!/bin/sh
 git clone https://github.com/microsoft/qlib.git
 cd qlib
 ls

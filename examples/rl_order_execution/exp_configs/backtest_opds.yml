@@ -3,7 +3,7 @@ start_time: "9:30"
 end_time: "14:54"
 data_granularity: "5min"
 qlib:
-  provider_uri_5min: ./data/bin/
+  provider_uri_5min: ../../qlib_data/cn_data_5min
 exchange:
   limit_threshold: null
   deal_price: ["$close", "$close"]
@@ -49,5 +49,5 @@ strategies:
     class: TWAPStrategy
     kwargs: {}
     module_path: qlib.contrib.strategy.rule_strategy
-concurrency: 16
+concurrency: 8
 output_dir: outputs/opds/

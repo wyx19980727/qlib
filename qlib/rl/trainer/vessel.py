@@ -7,7 +7,9 @@ import weakref
 from typing import TYPE_CHECKING, Any, Callable, ContextManager, Dict, Generic, Iterable, Sequence, TypeVar, cast
 
 import numpy as np
+import dataclasses
 from tianshou.data import Collector, VectorReplayBuffer
+from tianshou.policy.base import policy_within_training_step
 from tianshou.env import BaseVectorEnv
 from tianshou.policy import BasePolicy
 
@@ -126,6 +128,7 @@ class TrainingVessel(TrainingVesselBase):
         buffer_size: int = 20000,
         episode_per_iter: int = 1000,
         update_kwargs: Dict[str, Any] = cast(Dict[str, Any], None),
+        producer_num_workers: int = 0,
     ):
         self.simulator_fn = simulator_fn  # type: ignore
         self.state_interpreter = state_interpreter
@@ -138,27 +141,37 @@ class TrainingVessel(TrainingVesselBase):
         self.buffer_size = buffer_size
         self.episode_per_iter = episode_per_iter
         self.update_kwargs = update_kwargs or {}
+        self.producer_num_workers = producer_num_workers
 
     def train_seed_iterator(self) -> ContextManager[Iterable[InitialStateType]] | Iterable[InitialStateType]:
         if self.train_initial_states is not None:
             _logger.info("Training initial states collection size: %d", len(self.train_initial_states))
             # Implement fast_dev_run here.
             train_initial_states = self._random_subset("train", self.train_initial_states, self.trainer.fast_dev_run)
-            return DataQueue(train_initial_states, repeat=-1, shuffle=True)
+            return DataQueue(
+                train_initial_states, repeat=-1, shuffle=True,
+                producer_num_workers=self.producer_num_workers,
+            )
         return super().train_seed_iterator()
 
     def val_seed_iterator(self) -> ContextManager[Iterable[InitialStateType]] | Iterable[InitialStateType]:
         if self.val_initial_states is not None:
             _logger.info("Validation initial states collection size: %d", len(self.val_initial_states))
             val_initial_states = self._random_subset("val", self.val_initial_states, self.trainer.fast_dev_run)
-            return DataQueue(val_initial_states, repeat=1)
+            return DataQueue(
+                val_initial_states, repeat=1,
+                producer_num_workers=self.producer_num_workers,
+            )
         return super().val_seed_iterator()
 
     def test_seed_iterator(self) -> ContextManager[Iterable[InitialStateType]] | Iterable[InitialStateType]:
         if self.test_initial_states is not None:
             _logger.info("Testing initial states collection size: %d", len(self.test_initial_states))
             test_initial_states = self._random_subset("test", self.test_initial_states, self.trainer.fast_dev_run)
-            return DataQueue(test_initial_states, repeat=1)
+            return DataQueue(
+                test_initial_states, repeat=1,
+                producer_num_workers=self.producer_num_workers,
+            )
         return super().test_seed_iterator()
 
     def train(self, vector_env: FiniteVectorEnv) -> Dict[str, Any]:
@@ -178,9 +191,10 @@ class TrainingVessel(TrainingVesselBase):
             else:
                 episodes = self.episode_per_iter
 
-            col_result = collector.collect(n_episode=episodes)
-            update_result = self.policy.update(sample_size=0, buffer=collector.buffer, **self.update_kwargs)
-            res = {**col_result, **update_result}
+            col_result = collector.collect(n_episode=episodes, reset_before_collect=True)
+            with policy_within_training_step(self.policy):
+                update_result = self.policy.update(sample_size=0, buffer=collector.buffer, **self.update_kwargs)
+            res = {**dataclasses.asdict(col_result), **dataclasses.asdict(update_result)}
             self.log_dict(res)
             return res
 
@@ -189,18 +203,20 @@ class TrainingVessel(TrainingVesselBase):
 
         with vector_env.collector_guard():
             test_collector = Collector(self.policy, vector_env)
-            res = test_collector.collect(n_step=INF * len(vector_env))
-            self.log_dict(res)
-            return res
+            res = test_collector.collect(n_step=INF * len(vector_env), reset_before_collect=True)
+            res_dict = dataclasses.asdict(res)
+            self.log_dict(res_dict)
+            return res_dict
 
     def test(self, vector_env: FiniteVectorEnv) -> Dict[str, Any]:
         self.policy.eval()
 
         with vector_env.collector_guard():
             test_collector = Collector(self.policy, vector_env)
-            res = test_collector.collect(n_step=INF * len(vector_env))
-            self.log_dict(res)
-            return res
+            res = test_collector.collect(n_step=INF * len(vector_env), reset_before_collect=True)
+            res_dict = dataclasses.asdict(res)
+            self.log_dict(res_dict)
+            return res_dict
 
     @staticmethod
     def _random_subset(name: str, collection: Sequence[T], size: int | None) -> Sequence[T]:

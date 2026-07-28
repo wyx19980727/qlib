@@ -6,11 +6,11 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Dict, Generator, Iterable, Optional, OrderedDict, Tuple, cast
 
-import gym
+import gymnasium as gym
 import numpy as np
 import torch
 import torch.nn as nn
-from gym.spaces import Discrete
+from gymnasium.spaces import Discrete
 from tianshou.data import Batch, ReplayBuffer, to_torch
 from tianshou.policy import BasePolicy, PPOPolicy, DQNPolicy
 
@@ -138,10 +138,11 @@ class PPO(PPOPolicy):
             weight_decay=weight_decay,
         )
         super().__init__(
-            actor,
-            critic,
-            optimizer,
-            torch.distributions.Categorical,
+            actor=actor,
+            critic=critic,
+            optim=optimizer,
+            dist_fn=torch.distributions.Categorical,
+            action_scaling=False,
             discount_factor=discount_factor,
             max_grad_norm=max_grad_norm,
             reward_normalization=reward_normalization,

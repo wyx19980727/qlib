@@ -47,6 +47,13 @@ examples/_albus_output/
 *.xlsx
 *.bak
 db.sqlite3
+*.pth
+*.log
+*.pdf
+albus/output/
+examples/rl_order_execution/bak/
+examples/rl_order_execution/exp_configs/*copy*
+albus/bak/
 
 tags
 

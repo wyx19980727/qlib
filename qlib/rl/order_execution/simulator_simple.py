@@ -336,7 +336,10 @@ class SingleAssetOrderExecutionSimple(Simulator[Order, SAOEState, float]):
         # dataframe.append is deprecated
         other_df = pd.DataFrame(other).set_index("datetime")
         other_df.index.name = "datetime"
-        return pd.concat([df, other_df], axis=0)
+        frames = [f for f in [df, other_df] if len(f) > 0]
+        if len(frames) == 0:
+            return df
+        return pd.concat(frames, axis=0)
 
 
 def price_advantage(

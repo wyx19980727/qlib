@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from typing import Dict, Tuple, Union, Callable, List
 import bisect
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -489,7 +490,9 @@ class IndexData(metaclass=index_data_ops_creator):
         assert out is None and dtype is None, "`out` is just for compatible with numpy's aggregating function"
         # FIXME: weird logic and not general
         if axis is None:
-            return np.nanmean(self.data)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", RuntimeWarning)
+                return np.nanmean(self.data)
         elif axis == 0:
             tmp_data = np.nanmean(self.data, axis=0)
             return SingleData(tmp_data, self.columns)
@@ -612,7 +615,7 @@ class SingleData(IndexData):
         return dict(zip(self.index, self.data.tolist()))
 
     def to_series(self):
-        return pd.Series(self.data, index=self.index)
+        return pd.Series(self.data, index=self.index.tolist())
 
     def __repr__(self) -> str:
         return str(pd.Series(self.data, index=self.index.tolist()))
