@@ -40,6 +40,14 @@ test-output.xml
 # special software
 mlruns/
 
+qlib_data/
+.opencode/
+examples/qlib_data/
+examples/_albus_output/
+*.xlsx
+*.bak
+db.sqlite3
+
 tags
 
 .pytest_cache/
