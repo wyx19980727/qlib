@@ -9,9 +9,13 @@ from qlib.utils import init_instance_by_config
 from qlib.tests.data import GetData
 from qlib.tests.config import CSI300_GBDT_TASK
 
+import os
+os.environ["MLFLOW_ALLOW_FILE_STORE"] = "true"
+
 if __name__ == "__main__":
     # use default data
-    provider_uri = "~/.qlib/qlib_data/cn_data"  # target_dir
+    # provider_uri = "~/.qlib/qlib_data/cn_data"  # target_dir
+    provider_uri = "/home/albus/Python_Codes/qlib/qlib_data/cn_data/qlib_bin"  # target_dir
     GetData().qlib_data(target_dir=provider_uri, region=REG_CN, exists_skip=True)
 
     qlib.init(provider_uri=provider_uri, region=REG_CN)

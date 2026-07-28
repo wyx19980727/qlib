@@ -10,7 +10,7 @@ instruments: &ins csi300s19_22
 # qlib related configuration
 qlib_conf:
     provider_uri: 
-        5min: ./data/bin # path to generated qlib bin
+        5min: ../../qlib_data/cn_data_5min # path to generated qlib bin
     redis_port: 233
 feature_conf:
     path: ./data/pickle/feature.pkl # output path of feature

@@ -13,7 +13,7 @@ import warnings
 from contextlib import contextmanager
 from typing import Any, Callable, Dict, Generator, List, Optional, Set, Tuple, Type, Union, cast
 
-import gym
+import gymnasium as gym
 import numpy as np
 from tianshou.env import BaseVectorEnv, DummyVectorEnv, ShmemVectorEnv, SubprocVectorEnv
 
@@ -209,7 +209,7 @@ class FiniteVectorEnv(BaseVectorEnv):
 
     def reset(
         self,
-        id: int | List[int] | np.ndarray | None = None,
+        env_id: int | List[int] | np.ndarray | None = None,
     ) -> np.ndarray:
         assert not self._zombie
 
@@ -222,7 +222,7 @@ class FiniteVectorEnv(BaseVectorEnv):
                 RuntimeWarning,
             )
 
-        wrapped_id = self._wrap_id(id)
+        wrapped_id = self._wrap_id(env_id)
         self._reset_alive_envs()
 
         # ask super to reset alive envs and remap to current index
@@ -230,7 +230,8 @@ class FiniteVectorEnv(BaseVectorEnv):
         obs = [None] * len(wrapped_id)
         id2idx = {i: k for k, i in enumerate(wrapped_id)}
         if request_id:
-            for i, o in zip(request_id, super().reset(request_id)):
+            obs_arr, info_arr = super().reset(request_id)
+            for i, o in zip(request_id, obs_arr):
                 obs[id2idx[i]] = self._postproc_env_obs(o)
 
         for i, o in zip(wrapped_id, obs):
@@ -256,34 +257,36 @@ class FiniteVectorEnv(BaseVectorEnv):
             self._zombie = True
             raise StopIteration
 
-        return np.stack(obs)
+        return np.stack(obs), np.array([{} for _ in range(len(obs))])
 
     def step(
         self,
         action: np.ndarray,
         id: int | List[int] | np.ndarray | None = None,
-    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         assert not self._zombie
         wrapped_id = self._wrap_id(id)
         id2idx = {i: k for k, i in enumerate(wrapped_id)}
         request_id = list(filter(lambda i: i in self._alive_env_ids, wrapped_id))
-        result = [[None, None, False, None] for _ in range(len(wrapped_id))]
+        result = [[None, None, False, False, None] for _ in range(len(wrapped_id))]
 
         # ask super to step alive envs and remap to current index
         if request_id:
             valid_act = np.stack([action[id2idx[i]] for i in request_id])
-            for i, r in zip(request_id, zip(*super().step(valid_act, request_id))):
-                result[id2idx[i]] = list(r)
-                result[id2idx[i]][0] = self._postproc_env_obs(result[id2idx[i]][0])
+            step_ret = super().step(valid_act, request_id)
+            # step_ret is (obs_list, rew_list, term_list, trunc_list, info_list)
+            obs_list, rew_list, term_list, trunc_list, info_list = step_ret
+            for i, o, r, t, tr, inf in zip(request_id, obs_list, rew_list, term_list, trunc_list, info_list):
+                result[id2idx[i]] = [self._postproc_env_obs(o), r, t, tr, inf]
 
         # logging
         for i, r in zip(wrapped_id, result):
             if i in self._alive_env_ids:
                 for logger in self._logger:
-                    logger.on_env_step(i, *r)
+                    logger.on_env_step(i, r[0], r[1], r[2] or r[3], r[4])
 
         # fill empty observation/info with default(fake)
-        for _, r, ___, i in result:
+        for _, r, __, ___, i in result:
             self._set_default_info(i)
             self._set_default_rew(r)
         for i, r in enumerate(result):
@@ -291,11 +294,11 @@ class FiniteVectorEnv(BaseVectorEnv):
                 result[i][0] = self._get_default_obs()
             if r[1] is None:
                 result[i][1] = self._get_default_rew()
-            if r[3] is None:
-                result[i][3] = self._get_default_info()
+            if r[4] is None:
+                result[i][4] = self._get_default_info()
 
         ret = list(map(np.stack, zip(*result)))
-        return cast(Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray], ret)
+        return cast(Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray], ret)
 
 
 class FiniteDummyVectorEnv(FiniteVectorEnv, DummyVectorEnv):

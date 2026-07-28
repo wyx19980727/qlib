@@ -19,4 +19,3 @@ python collector.py --index_name CSI300 --qlib_dir ~/.qlib/qlib_data/cn_data --m
 # help
 python collector.py --help
 ```
-

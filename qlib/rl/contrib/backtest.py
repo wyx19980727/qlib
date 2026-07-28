@@ -80,7 +80,7 @@ def _convert_indicator_to_dataframe(indicator: dict) -> Optional[pd.DataFrame]:
     if not record_list:
         return None
 
-    records: pd.DataFrame = pd.concat(record_list, 0).reset_index().rename(columns={"index": "instrument"})
+    records: pd.DataFrame = pd.concat(record_list, axis=0).reset_index().rename(columns={"index": "instrument"})
     records = records.set_index(["instrument", "datetime"])
     return records
 

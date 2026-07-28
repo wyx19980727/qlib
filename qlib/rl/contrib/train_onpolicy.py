@@ -23,7 +23,7 @@ from qlib.rl.order_execution import SingleAssetOrderExecutionSimple
 from qlib.rl.reward import Reward
 from qlib.rl.trainer import Checkpoint, backtest, train
 from qlib.rl.trainer.callbacks import Callback, EarlyStopping, MetricsWriter
-from qlib.rl.utils.log import CsvWriter
+from qlib.rl.utils.log import ConsoleWriter, CsvWriter
 from qlib.utils import init_instance_by_config
 from tianshou.policy import BasePolicy
 from torch.utils.data import Dataset
@@ -169,6 +169,7 @@ def train_and_test(
                 "concurrency": env_config["concurrency"],
                 "val_every_n_iters": trainer_config.get("val_every_n_epoch", None),
                 "callbacks": callbacks,
+                "loggers": ConsoleWriter(total_episodes=None, log_every_n_episode=1000),
             },
             vessel_kwargs={
                 "episode_per_iter": trainer_config["episode_per_collect"],
@@ -177,6 +178,7 @@ def train_and_test(
                     "repeat": trainer_config["repeat_per_collect"],
                 },
                 "val_initial_states": valid_dataset,
+                "producer_num_workers": data_config.get("num_workers", 0),
             },
         )
 

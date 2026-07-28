@@ -51,3 +51,10 @@ tags
 ./pretrain
 .idea/
 .aider*
+
+# large data / personal artifacts
+qlib_data/
+examples/qlib_data/
+examples/_albus_output/
+albus/
+*.bak

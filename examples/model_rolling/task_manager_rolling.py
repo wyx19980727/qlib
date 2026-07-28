@@ -20,11 +20,14 @@ from qlib.model.ens.group import RollingGroup
 from qlib.model.trainer import TrainerR, TrainerRM, task_train
 from qlib.tests.config import CSI100_RECORD_LGB_TASK_CONFIG, CSI100_RECORD_XGBOOST_TASK_CONFIG
 
+import os
+os.environ["MLFLOW_ALLOW_FILE_STORE"] = "true"
 
 class RollingTaskExample:
     def __init__(
         self,
-        provider_uri="~/.qlib/qlib_data/cn_data",
+        # provider_uri="~/.qlib/qlib_data/cn_data",
+        provider_uri="/home/albus/Python_Codes/qlib/qlib_data/cn_data/qlib_bin",
         region=REG_CN,
         task_url="mongodb://10.0.0.4:27017/",
         task_db_name="rolling_db",
@@ -53,6 +56,7 @@ class RollingTaskExample:
 
     # Reset all things to the first status, be careful to save important data
     def reset(self):
+        import ipdb; ipdb.set_trace()
         print("========== reset ==========")
         if isinstance(self.trainer, TrainerRM):
             TaskManager(task_pool=self.task_pool).remove()
@@ -61,6 +65,7 @@ class RollingTaskExample:
             exp.delete_recorder(rid)
 
     def task_generating(self):
+        import ipdb; ipdb.set_trace()
         print("========== task_generating ==========")
         tasks = task_generator(
             tasks=self.task_config,
@@ -70,6 +75,7 @@ class RollingTaskExample:
         return tasks
 
     def task_training(self, tasks):
+        import ipdb; ipdb.set_trace()
         print("========== task_training ==========")
         self.trainer.train(tasks)
 
@@ -80,6 +86,7 @@ class RollingTaskExample:
         run_task(task_train, self.task_pool, experiment_name=self.experiment_name)
 
     def task_collecting(self):
+        import ipdb; ipdb.set_trace()
         print("========== task_collecting ==========")
 
         def rec_key(recorder):
@@ -104,6 +111,7 @@ class RollingTaskExample:
         print(collector())
 
     def main(self):
+        import ipdb; ipdb.set_trace()
         self.reset()
         tasks = self.task_generating()
         self.task_training(tasks)

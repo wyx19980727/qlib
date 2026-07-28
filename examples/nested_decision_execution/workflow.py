@@ -108,6 +108,8 @@ from qlib.workflow.record_temp import SignalRecord, PortAnaRecord
 from qlib.tests.data import GetData
 from qlib.backtest import collect_data
 
+import os
+os.environ["MLFLOW_ALLOW_FILE_STORE"] = "true"
 
 class NestedDecisionExecutionWorkflow:
     market = "csi300"
@@ -221,7 +223,8 @@ class NestedDecisionExecutionWorkflow:
 
     def _init_qlib(self):
         """initialize qlib"""
-        provider_uri_day = "~/.qlib/qlib_data/cn_data"  # target_dir
+        # provider_uri_day = "~/.qlib/qlib_data/cn_data"  # target_dir
+        provider_uri_day="/home/albus/Python_Codes/qlib/qlib_data/cn_data/qlib_bin"
         GetData().qlib_data(target_dir=provider_uri_day, region=REG_CN, version="v2", exists_skip=True)
         provider_uri_1min = HIGH_FREQ_CONFIG.get("provider_uri")
         GetData().qlib_data(

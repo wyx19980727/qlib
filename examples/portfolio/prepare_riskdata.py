@@ -7,6 +7,9 @@ import pandas as pd
 from qlib.data import D
 from qlib.model.riskmodel import StructuredCovEstimator
 
+import os
+os.environ["MLFLOW_ALLOW_FILE_STORE"] = "true"
+
 
 def prepare_data(riskdata_root="./riskdata", T=240, start_time="2016-01-01"):
     universe = D.features(D.instruments("csi300"), ["$close"], start_time=start_time).swaplevel().sort_index()
@@ -47,6 +50,6 @@ def prepare_data(riskdata_root="./riskdata", T=240, start_time="2016-01-01"):
 if __name__ == "__main__":
     import qlib
 
-    qlib.init(provider_uri="~/.qlib/qlib_data/cn_data")
+    qlib.init(provider_uri="/home/albus/Python_Codes/qlib/qlib_data/cn_data/qlib_bin")
 
     prepare_data()

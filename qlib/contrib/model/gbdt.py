@@ -17,6 +17,7 @@ class LGBModel(ModelFT, LightGBMFInt):
     """LightGBM Model"""
 
     def __init__(self, loss="mse", early_stopping_rounds=50, num_boost_round=1000, **kwargs):
+        #import ipdb; ipdb.set_trace()
         if loss not in {"mse", "binary"}:
             raise NotImplementedError
         self.params = {"objective": loss, "verbosity": -1}
@@ -30,6 +31,7 @@ class LGBModel(ModelFT, LightGBMFInt):
         The motivation of current version is to make validation optional
         - train segment is necessary;
         """
+        #import ipdb; ipdb.set_trace()
         ds_l = []
         assert "train" in dataset.segments
         for key in ["train", "valid"]:
@@ -64,6 +66,7 @@ class LGBModel(ModelFT, LightGBMFInt):
         reweighter=None,
         **kwargs,
     ):
+        #import ipdb; ipdb.set_trace()
         if evals_result is None:
             evals_result = {}  # in case of unsafety of Python default values
         ds_l = self._prepare_data(dataset, reweighter)
@@ -90,6 +93,7 @@ class LGBModel(ModelFT, LightGBMFInt):
                     R.log_metrics(**{name.replace("@", "_"): m}, step=epoch)
 
     def predict(self, dataset: DatasetH, segment: Union[Text, slice] = "test"):
+        #import ipdb; ipdb.set_trace()
         if self.model is None:
             raise ValueError("model is not fitted yet!")
         x_test = dataset.prepare(segment, col_set="feature", data_key=DataHandlerLP.DK_I)
@@ -109,6 +113,7 @@ class LGBModel(ModelFT, LightGBMFInt):
             verbose level
         """
         # Based on existing model and finetune by train more rounds
+        #import ipdb; ipdb.set_trace()
         ds_l = self._prepare_data(dataset, reweighter)
         dtrain, _ = ds_l[0]
 

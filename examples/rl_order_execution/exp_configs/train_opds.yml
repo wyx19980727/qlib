@@ -3,7 +3,7 @@ simulator:
   time_per_step: 30
   vol_limit: null
 env:
-  concurrency: 32
+  concurrency: 28
   parallel_mode: dummy
 action_interpreter:
   class: CategoricalActionInterpreter
@@ -30,6 +30,7 @@ reward:
   class: PAPenaltyReward
   kwargs:
     penalty: 4.0
+    # penalty: 30
     scale: 0.01
   module_path: qlib.rl.order_execution.reward
 data:
@@ -42,7 +43,7 @@ data:
     default_start_time_index: 0
     default_end_time_index: 235
     proc_data_dim: 5
-  num_workers: 0
+  num_workers: 10
   queue_size: 20
 network:
   class: Recurrent
@@ -56,11 +57,16 @@ runtime:
   seed: 42
   use_cuda: false
 trainer:
-  max_epoch: 500
-  repeat_per_collect: 25
+  max_epoch: 500      # original: full 500 epochs (~days)
+  # max_epoch: 20           # quick test: 20 epochs
+  repeat_per_collect: 25  # original
+  # repeat_per_collect: 3     # quick test
   earlystop_patience: 50
-  episode_per_collect: 10000
+  # earlystop_patience: 10
+  episode_per_collect: 10000  # original
+  # episode_per_collect: 500     # quick test
   batch_size: 1024
   val_every_n_epoch: 4
+  # val_every_n_epoch: 2
   checkpoint_path: ./outputs/opds
-  checkpoint_every_n_iters: 1
+  checkpoint_every_n_iters: 500
