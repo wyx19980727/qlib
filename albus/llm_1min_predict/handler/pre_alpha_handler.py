@@ -61,6 +61,11 @@ from typing import Dict, Iterable, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 
+# 确保项目根目录（含本地 qlib/ 源码）优先于 site-packages 的 qlib
+_project_root = Path(__file__).resolve().parents[3]
+if str(_project_root) not in sys.path:
+    sys.path.insert(0, str(_project_root))
+
 # qlib 系列导入放在末层，避免循环依赖
 from qlib.contrib.data.handler import Alpha158, check_transform_proc
 from qlib.contrib.ops.high_freq import (
@@ -84,6 +89,8 @@ GOLDEN_DIR = Path("/home/albus/Python_Codes/qlib/qlib_data/golden_data_1min")
 
 # 涨/跌 二分类 label：t+2 收盘 > t+1 收盘 → 1 否则 0
 BINARY_LABEL_EXPR = "If(Gt(Ref($close, -2), Ref($close, -1)), 1, 0)"
+# 即时预测 label：t+1 收盘 > t 收盘 → 1 否则 0（港股 T+0 适用）
+IMMEDIATE_LABEL_EXPR = "If(Gt(Ref($close, -1), $close), 1, 0)"
 
 # example/highfreq 自定义算子（已在 qlib.contrib.ops.high_freq 内置）
 CUSTOM_OPS = [DayLast, FFillNan, BFillNan, Date, Select, IsNull, Cut]
@@ -123,7 +130,7 @@ def init_qlib(silver_uri: str = SILVER_URI):
 
 
 class Alpha158Binary(Alpha158):
-    """Alpha158 + 涨/跌二分类 LABEL0。
+    """Alpha158 + 涨/跌二分类 LABEL0（T+1→T+2）。
 
     原版 Alpha158.get_label_config() 返回连续收益率 Ref(c,-2)/Ref(c,-1)-1，
     本类 override 为 If(Gt(Ref(c,-2), Ref(c,-1)), 1, 0)，即 t+2 涨=1 跌=0。
@@ -132,6 +139,13 @@ class Alpha158Binary(Alpha158):
 
     def get_label_config(self):
         return [BINARY_LABEL_EXPR], ["LABEL0"]
+
+
+class Alpha158Immediate(Alpha158):
+    """Alpha158 + 即时预测 LABEL0（T→T+1，港股 T+0 适用）。"""
+
+    def get_label_config(self):
+        return [IMMEDIATE_LABEL_EXPR], ["LABEL0"]
 
 
 # Alpha158Binary 注册到 HANDLERS，不由用户区分。
@@ -285,6 +299,13 @@ class HFH12Handler(DataHandlerLP):
 
     def get_label_config(self) -> Tuple[List[str], List[str]]:
         return [BINARY_LABEL_EXPR], ["LABEL0"]
+
+
+class HFH12ImmediateHandler(HFH12Handler):
+    """HFH12 特征 + 即时预测 LABEL0（T→T+1，港股 T+0 适用）。"""
+
+    def get_label_config(self) -> Tuple[List[str], List[str]]:
+        return [IMMEDIATE_LABEL_EXPR], ["LABEL0"]
 
 
 # --------------------------------------------------------------------------- #
@@ -523,7 +544,12 @@ class PreAlphaHandler:
         golden 目录根
     """
 
-    HANDLERS = {"alpha158": Alpha158Binary, "hfh12": HFH12Handler}
+    HANDLERS = {
+        "alpha158": Alpha158Binary,
+        "hfh12": HFH12Handler,
+        "hfh12_immediate": HFH12ImmediateHandler,
+        "alpha158_immediate": Alpha158Immediate,
+    }
 
     def __init__(
         self,
@@ -585,7 +611,7 @@ class PreAlphaHandler:
             infer_processors=self.infer_processors,
             learn_processors=self.learn_processors,
         )
-        if name == "alpha158":
+        if name in ("alpha158", "alpha158_immediate"):
             kwargs["freq"] = "1min"
         return cls(**kwargs)
 
@@ -814,8 +840,8 @@ def main():
     parser.add_argument("--instruments", default="all", help="传给 handler 的 instruments")
     parser.add_argument(
         "--handlers",
-        default="alpha158,hfh12",
-        help="要生成的 handler，逗号分隔，可选: alpha158,hfh12",
+        default="alpha158_immediate",
+        help="要生成的 handler，逗号分隔，可选: alpha158,hfh12,hfh12_immediate,alpha158_immediate",
     )
     parser.add_argument(
         "--formats",
@@ -833,10 +859,10 @@ def main():
         help="冒烟模式 (5 标的 3 天小样本)",
     )
     parser.add_argument(
-        "--chunk-size", type=int, default=500,
+        "--chunk-size", type=int, default=50,
         help="按标的分组: 0=一次性加载全部, >0=每组N个标的跑完整时间窗口(无 rolling/Cut/label 边界损耗)",
     )
-    parser.add_argument("--workers", type=int, default=8, help="dump_bin 并发数")
+    parser.add_argument("--workers", type=int, default=14, help="dump_bin 并发数")
     args = parser.parse_args()
 
     if args.test:
